@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Pessoas - Menu</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Sistema de Cadastro de Pessoas</h1>
+            <p>Gerencie pessoas de forma simples e eficiente</p>
+        </header>
+
+        <main class="menu-container">
+            <div class="menu-card">
+                <div class="menu-option">
+                    <div class="icon">👤</div>
+                    <h2>Cadastrar Pessoa</h2>
+                    <p>Adicione uma nova pessoa ao sistema</p>
+                    <a href="cadastro.html" class="btn btn-primary">Cadastrar</a>
+                </div>
+            </div>
+
+            <div class="menu-card">
+                <div class="menu-option">
+                    <div class="icon">📋</div>
+                    <h2>Listar Pessoas</h2>
+                    <p>Visualize todas as pessoas cadastradas</p>
+                    <a href="listagem.html" class="btn btn-secondary">Listar</a>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 Sistema de Pessoas - Exemplo Docker</p>
+        </footer>
+    </div>
+
+    <script>
+        // Verificar se a API está funcionando
+        async function checkApiHealth() {
+            try {
+                const response = await fetch('http://localhost:5001/health');
+                if (response.ok) {
+                    console.log('API está funcionando!');
+                } else {
+                    console.warn('API pode estar com problemas');
+                }
+            } catch (error) {
+                console.warn('Não foi possível conectar à API:', error.message);
+            }
+        }
+
+        // Verificar API ao carregar a página
+        document.addEventListener('DOMContentLoaded', checkApiHealth);
+    </script>
+</body>
+</html>

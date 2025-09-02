@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de Pessoas</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Lista de Pessoas</h1>
+            <nav>
+                <a href="index.html" class="btn btn-outline">← Voltar ao Menu</a>
+                <a href="cadastro.html" class="btn btn-primary">+ Nova Pessoa</a>
+            </nav>
+        </header>
+
+        <main class="list-container">
+            <div class="list-header">
+                <h2>Pessoas Cadastradas</h2>
+                <button id="refreshBtn" class="btn btn-secondary" onclick="loadPessoas()">
+                    🔄 Atualizar
+                </button>
+            </div>
+
+            <!-- Loading indicator -->
+            <div id="loading" class="loading" style="display: none;">
+                <div class="loading-spinner"></div>
+                <p>Carregando pessoas...</p>
+            </div>
+
+            <!-- Mensagens -->
+            <div id="message" class="message" style="display: none;"></div>
+
+            <!-- Lista de pessoas -->
+            <div id="pessoasList" class="pessoas-list">
+                <!-- Pessoas serão carregadas aqui via JavaScript -->
+            </div>
+
+            <!-- Estado vazio -->
+            <div id="emptyState" class="empty-state" style="display: none;">
+                <div class="empty-icon">👥</div>
+                <h3>Nenhuma pessoa cadastrada</h3>
+                <p>Comece cadastrando a primeira pessoa!</p>
+                <a href="cadastro.html" class="btn btn-primary">Cadastrar Primeira Pessoa</a>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 Sistema de Pessoas</p>
+        </footer>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'http://localhost:5001';
+
+        // Carregar pessoas ao carregar a página
+        document.addEventListener('DOMContentLoaded', function() {
+            loadPessoas();
+        });
+
+        async function loadPessoas() {
+            const loading = document.getElementById('loading');
+            const pessoasList = document.getElementById('pessoasList');
+            const emptyState = document.getElementById('emptyState');
+            const messageDiv = document.getElementById('message');
+            const refreshBtn = document.getElementById('refreshBtn');
+
+            // Mostrar loading
+            loading.style.display = 'block';
+            pessoasList.style.display = 'none';
+            emptyState.style.display = 'none';
+            messageDiv.style.display = 'none';
+            refreshBtn.disabled = true;
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/person`);
+                const result = await response.json();
+
+                if (response.ok) {
+                    const pessoas = result.pessoas || [];
+                    
+                    if (pessoas.length === 0) {
+                        // Mostrar estado vazio
+                        emptyState.style.display = 'block';
+                    } else {
+                        // Mostrar lista de pessoas
+                        renderPessoas(pessoas);
+                        pessoasList.style.display = 'block';
+                    }
+                } else {
+                    showMessage(result.error || 'Erro ao carregar pessoas', 'error');
+                }
+
+            } catch (error) {
+                console.error('Erro:', error);
+                showMessage('Erro de conexão com o servidor. Verifique se a API está rodando.', 'error');
+            } finally {
+                // Esconder loading
+                loading.style.display = 'none';
+                refreshBtn.disabled = false;
+            }
+        }
+
+        function renderPessoas(pessoas) {
+            const pessoasList = document.getElementById('pessoasList');
+            
+            pessoasList.innerHTML = `
+                <div class="list-stats">
+                    <p><strong>${pessoas.length}</strong> pessoa${pessoas.length !== 1 ? 's' : ''} cadastrada${pessoas.length !== 1 ? 's' : ''}</p>
+                </div>
+                
+                <div class="pessoas-grid">
+                    ${pessoas.map(pessoa => `
+                        <div class="pessoa-card">
+                            <div class="pessoa-info">
+                                <h3>${escapeHtml(pessoa.nome)}</h3>
+                                <p class="endereco">📍 ${escapeHtml(pessoa.endereco)}</p>
+                                <p class="data">📅 ${formatDate(pessoa.data_criacao)}</p>
+                            </div>
+                            <div class="pessoa-id">
+                                ID: ${pessoa.id}
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'Data não disponível';
+            
+            try {
+                const date = new Date(dateString);
+                return date.toLocaleString('pt-BR', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (error) {
+                return 'Data inválida';
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = `message ${type}`;
+            messageDiv.style.display = 'block';
+            
+            // Auto-hide após 5 segundos
+            setTimeout(() => {
+                messageDiv.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

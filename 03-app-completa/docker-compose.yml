@@ -1,0 +1,66 @@
+services:
+  # Banco de dados PostgreSQL (não exposto)
+  postgres:
+    image: postgres:15-alpine
+    container_name: pessoas_db
+    environment:
+      POSTGRES_DB: pessoas_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # Sem exposição de porta - apenas acesso interno
+
+  # Backend Flask API (não exposto)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: pessoas_api
+    environment:
+      DB_HOST: postgres
+      DB_NAME: pessoas_db
+      DB_USER: postgres
+      DB_PASSWORD: postgres123
+      DB_PORT: 5432
+      FLASK_ENV: development
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+    # Sem exposição de porta - apenas acesso interno
+
+  # Frontend Next.js (único ponto de entrada)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: pessoas_nextjs
+    environment:
+      BACKEND_URL: http://backend:5000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    networks:
+      - app-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  app-network:
+    driver: bridge
